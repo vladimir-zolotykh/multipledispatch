@@ -1,6 +1,8 @@
 .emacs.desktop*
 ARCHIVE
 SOW/
+example2.py
+register_pattern.py
 example4.py
 polys.bin
 *.mp3
