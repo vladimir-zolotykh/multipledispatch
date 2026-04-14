@@ -29,7 +29,7 @@ class MultiMethod:
         self._name = name
 
     def __call__(self, *args, **kwargs):
-        types = tuple([type(arg) for arg in args])
+        types = tuple([type(arg) for arg in args][1:])
         omethod = self._types[types]
         omethod(*args, **kwargs)
 
