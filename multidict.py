@@ -1,13 +1,47 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
+import types as typesmod
+import inspect
 
 
 class MultiDict(dict):
     def __setitem__(self, key, value):
-        if not key.startswith("__"):
-            print(f"{key = }, {value = }")
-        super().__setitem__(key, value)
+        if key.startswith("__") or key not in self:
+            super().__setitem__(key, value)
+            return
+        ovalue = self[key]
+        if isinstance(ovalue, MultiMethod):
+            mm = ovalue
+        else:
+            mm = MultiMethod()
+            mm.register(ovalue)
+        mm.register(value)
+        super().__setitem__(key, mm)
+
+
+class MultiMethod:
+    def __init__(self, name=None):
+        self._name = name
+        self._types = {}  # signature -> method dict
+
+    def __set_name__(self, owner, name):
+        self._name = name
+
+    def __call__(self, *args, **kwargs):
+        types = tuple([type(arg) for arg in args])
+        omethod = self._types[types]
+        omethod(*args, **kwargs)
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        return typesmod.MethodType(self, instance)
+
+    def register(self, omethod):  # overloaded method
+        sig = inspect.signature(omethod)
+        types = tuple([v.annotation for v in sig.parameters.values()][1:])
+        self._types[types] = omethod
 
 
 class MultiMeta(type):
@@ -32,3 +66,5 @@ class Spam(metaclass=MultiMeta):
 
 if __name__ == "__main__":
     s = Spam()
+    print(s.bar(3, 5))
+    print(s.bar("hello", 22))
