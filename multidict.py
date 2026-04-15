@@ -51,8 +51,6 @@ class MultiMethod:
     def register(self, omethod):  # overloaded method
         sig = inspect.signature(omethod)
         types = tuple([v.annotation for v in sig.parameters.values()][1:])
-        defaults = tuple([v.default for v in sig.parameters.values()][1:])
-        print(f"{self._name = }, \n{types = }, \n{defaults = }")
         self._types[types] = omethod
 
 
