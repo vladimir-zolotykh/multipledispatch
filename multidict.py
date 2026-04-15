@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
+import sys
 import types as typesmod
 import inspect
+import pytest
 
 
 class MultiDict(dict):
@@ -28,7 +30,7 @@ class MultiMethod:
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args][1:])
         omethod = self._types[types]
-        omethod(*args, **kwargs)
+        return omethod(*args, **kwargs)
 
     def __get__(self, instance, owner=None):
         if instance is None:
@@ -49,10 +51,12 @@ class MultiMeta(type):
 
 class Spam(metaclass=MultiMeta):
     def bar(self, x: int, y: int):
-        print("Bar 1: ", x, y)
+        # print("Bar 1: ", x, y)
+        return f"Bar 1: {x}, {y}"
 
     def bar(self, s: str, n: int = 0):  # noqa: F811
-        print("Bar 2: ", s, n)
+        # print("Bar 2: ", s, n)
+        return f"Bar 2: {s}, {n}"
 
 
 import time  # noqa: E402
@@ -69,9 +73,15 @@ class Date(metaclass=MultiMeta):
         self.__init__(t.tm_year, t.tm_mon, t.tm_mday)
 
 
-if __name__ == "__main__":
+def test_basic():
     s = Spam()
-    s.bar(3, 5)
-    s.bar("hello", 22)
+    assert s.bar(3, 5) == "Bar 1: 3, 5"
+    assert s.bar("hello", 22) == "Bar 2: hello, 22"
     d = Date(2012, 12, 21)
+    assert (d.year, d.month, d.day) == (2012, 12, 21)
     e = Date()
+    assert (e.year, e.month, e.day) == (2026, 4, 15)
+
+
+if __name__ == "__main__":
+    print(sys.argv)
