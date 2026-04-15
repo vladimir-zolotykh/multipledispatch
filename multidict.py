@@ -25,9 +25,6 @@ class MultiMethod:
         self._name = name
         self._types = {}  # signature -> method dict
 
-    def __set_name__(self, owner, name):
-        self._name = name
-
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args][1:])
         omethod = self._types[types]
@@ -45,12 +42,6 @@ class MultiMethod:
 
 
 class MultiMeta(type):
-    def __new__(mcls, clsname, bases, clsdict):
-        for attr, value in clsdict.items():
-            if not attr.startswith("__"):
-                print(f"{attr = }, {value = }")
-        return super().__new__(mcls, clsname, bases, clsdict)
-
     @classmethod
     def __prepare__(metacls, name, bases, **kwargs):
         return MultiDict()
