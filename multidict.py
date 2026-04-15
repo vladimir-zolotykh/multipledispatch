@@ -7,7 +7,7 @@ import inspect
 
 class MultiDict(dict):
     def __setitem__(self, key, value):
-        if key.startswith("__") or key not in self:
+        if key not in self:
             super().__setitem__(key, value)
             return
         ovalue = self[key]
@@ -55,7 +55,23 @@ class Spam(metaclass=MultiMeta):
         print("Bar 2: ", s, n)
 
 
+import time  # noqa: E402
+
+
+class Date(metaclass=MultiMeta):
+    def __init__(self, year: int, month: int, day: int):
+        self.year = year
+        self.month = month
+        self.day = day
+
+    def __init__(self):  # noqa: F811
+        t = time.localtime()
+        self.__init__(t.tm_year, t.tm_mon, t.tm_mday)
+
+
 if __name__ == "__main__":
     s = Spam()
-    print(s.bar(3, 5))
-    print(s.bar("hello", 22))
+    s.bar(3, 5)
+    s.bar("hello", 22)
+    d = Date(2012, 12, 21)
+    e = Date()
