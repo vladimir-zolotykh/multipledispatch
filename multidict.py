@@ -84,4 +84,4 @@ def test_basic():
 
 
 if __name__ == "__main__":
-    print(sys.argv)
+    pytest.main(sys.argv)
