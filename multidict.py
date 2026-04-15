@@ -28,18 +28,19 @@ class MultiMethod:
         self._types = {}  # signature -> method dict
 
     def add_default_types(self, types):
-        return tuple(types + (int,))
-        # for typ in self._types:
-        #     if types == typ[: len(self._types)]:
-        #         pass
+        n = len(types)
+        for typ in self._types:
+            if typ[:n] == types:
+                types = tuple(types + typ[n:])
+        return types
 
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args][1:])
         try:
             omethod = self._types[types]
         except KeyError:
-            new_types = self.add_default_types(types)
-            omethod = self._types[new_types]
+            types = self.add_default_types(types)
+            omethod = self._types[types]
         return omethod(*args, **kwargs)
 
     def __get__(self, instance, owner=None):
@@ -51,7 +52,7 @@ class MultiMethod:
         sig = inspect.signature(omethod)
         types = tuple([v.annotation for v in sig.parameters.values()][1:])
         defaults = tuple([v.default for v in sig.parameters.values()][1:])
-        print(f"{self._name = }, {defaults = }")
+        print(f"{self._name = }, \n{types = }, \n{defaults = }")
         self._types[types] = omethod
 
 
