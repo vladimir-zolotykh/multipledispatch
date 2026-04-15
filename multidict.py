@@ -16,7 +16,7 @@ class MultiDict(dict):
         if isinstance(ovalue, MultiMethod):
             mm = ovalue
         else:
-            mm = MultiMethod()
+            mm = MultiMethod(key)
             mm.register(ovalue)
         mm.register(value)
         super().__setitem__(key, mm)
@@ -27,9 +27,19 @@ class MultiMethod:
         self._name = name
         self._types = {}  # signature -> method dict
 
+    def add_default_types(self, types):
+        return tuple(types + (int,))
+        # for typ in self._types:
+        #     if types == typ[: len(self._types)]:
+        #         pass
+
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args][1:])
-        omethod = self._types[types]
+        try:
+            omethod = self._types[types]
+        except KeyError:
+            new_types = self.add_default_types(types)
+            omethod = self._types[new_types]
         return omethod(*args, **kwargs)
 
     def __get__(self, instance, owner=None):
@@ -40,6 +50,8 @@ class MultiMethod:
     def register(self, omethod):  # overloaded method
         sig = inspect.signature(omethod)
         types = tuple([v.annotation for v in sig.parameters.values()][1:])
+        defaults = tuple([v.default for v in sig.parameters.values()][1:])
+        print(f"{self._name = }, {defaults = }")
         self._types[types] = omethod
 
 
@@ -77,6 +89,7 @@ def test_basic():
     s = Spam()
     assert s.bar(3, 5) == "Bar 1: 3, 5"
     assert s.bar("hello", 22) == "Bar 2: hello, 22"
+    assert s.bar("hello") == "Bar 2: hello, 0"
     d = Date(2012, 12, 21)
     assert (d.year, d.month, d.day) == (2012, 12, 21)
     e = Date()
