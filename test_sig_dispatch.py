@@ -19,17 +19,14 @@ def bar3(s: str, n: int = 0):
 
 
 def select(*args, **kwargs):
-    functions = [bar1, bar2, bar3]
-    # with open(".test_sig_dispa
-    with open(f".{os.path.splitext(os.path.basename(__file__))[0]}.log", "wt") as f:
-        for func in functions:
-            sig = inspect.signature(func)
-            try:
-                sig.bind(*args, **kwargs)
-                print(f"Best match {func.__name__}", file=f)
-            except TypeError as exc:
-                # print(f"{func.__name__}: {args, kwargs} - {exc}")
-                print(exc, file=f)
+    _sig_cache = {f: inspect.signature(f) for f in [bar1, bar2, bar3]}
+    for func in _sig_cache:
+        sig = _sig_cache[func]
+        try:
+            sig.bind(*args, **kwargs)
+            print(f"Best match {func.__name__}")
+        except TypeError as exc:
+            print(exc)
 
 
 def test_select():
