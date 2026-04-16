@@ -20,19 +20,18 @@ def bar3(s: str, n: int = 0):
 
 def select(*args, **kwargs):
     functions = [bar1, bar2, bar3]
-    for func in functions:
-        sig = inspect.signature(func)
-        try:
-            sig.bind(*args, **kwargs)
-            print(f"Best match {func.__name__}")
-        except TypeError as exc:
-            print(f"{func.__name__}: {args, kwargs} - {exc}")
-            # with open(
-            #     f".{os.path.splitext(os.path.basename(__file__))[0]}.log", "w"
-            # ) as f:
-            #     print(exc, file=f)
+    # with open(".test_sig_dispa
+    with open(f".{os.path.splitext(os.path.basename(__file__))[0]}.log", "wt") as f:
+        for func in functions:
+            sig = inspect.signature(func)
+            try:
+                sig.bind(*args, **kwargs)
+                print(f"Best match {func.__name__}", file=f)
+            except TypeError as exc:
+                # print(f"{func.__name__}: {args, kwargs} - {exc}")
+                print(exc, file=f)
 
 
-if __name__ == "__main__":
-    # def test_select():
+def test_select():
+    # if __name__ == "__main__":
     select("hello")
