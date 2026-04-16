@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
+from typing import Any
 import sys
 import types as typesmod
 import inspect
@@ -26,21 +27,34 @@ class MultiMethod:
     def __init__(self, name=None):
         self._name = name
         self._types = {}  # signature -> method dict
+        self._signatures = {}
 
-    def add_default_types(self, types):
-        n = len(types)
-        for typ in self._types:
-            if typ[:n] == types:
-                types = tuple(types + typ[n:])
-        return types
+    # def add_default_types(self, types):
+    #     n = len(types)
+    #     for typ in self._types:
+    #         if typ[:n] == types:
+    #             types = tuple(types + typ[n:])
+    #     return types
+
+    def select_signatue(
+        self, *args: list[Any], **kwargs: dict[str, Any]
+    ) -> tuple[type, ...]:
+        for key, sig in self._signatures.items():
+            try:
+                sig.bind(*args, **kwargs)
+                return tuple([parm.annotation for parm in sig.parameters.values()])
+            except TypeError:
+                pass  # continue checking
+        raise TypeError(f"No matching method for {args}, {kwargs}")
 
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args][1:])
         try:
             omethod = self._types[types]
         except KeyError:
-            types = self.add_default_types(types)
-            omethod = self._types[types]
+            types = self.select_signatue(*args, **kwargs)
+            # types = self.add_default_types(types)
+            omethod = self._types[types[1:]]
         return omethod(*args, **kwargs)
 
     def __get__(self, instance, owner=None):
@@ -52,6 +66,7 @@ class MultiMethod:
         sig = inspect.signature(omethod)
         types = tuple([v.annotation for v in sig.parameters.values()][1:])
         self._types[types] = omethod
+        self._signatures[self._name] = sig
 
 
 class MultiMeta(type):
