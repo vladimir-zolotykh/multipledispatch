@@ -92,7 +92,12 @@ def test_basic():
     d = Date(2012, 12, 21)
     assert (d.year, d.month, d.day) == (2012, 12, 21)
     e = Date()
-    assert (e.year, e.month, e.day) == (2026, 4, 15)
+
+    def today():
+        t = time.localtime()
+        return t.tm_year, t.tm_mon, t.tm_mday
+
+    assert (e.year, e.month, e.day) == today()
 
 
 if __name__ == "__main__":
