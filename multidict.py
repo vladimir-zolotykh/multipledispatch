@@ -29,13 +29,6 @@ class MultiMethod:
         self._types = {}  # signature -> method dict
         self._signatures = {}
 
-    # def add_default_types(self, types):
-    #     n = len(types)
-    #     for typ in self._types:
-    #         if typ[:n] == types:
-    #             types = tuple(types + typ[n:])
-    #     return types
-
     def select_signatue(
         self, *args: list[Any], **kwargs: dict[str, Any]
     ) -> tuple[type, ...]:
@@ -80,7 +73,7 @@ class Spam(metaclass=MultiMeta):
         # print("Bar 1: ", x, y)
         return f"Bar 1: {x}, {y}"
 
-    def bar(self, s: str, n: int = 0):  # noqa: F811
+    def bar(self, s: str, n: int = 0):  # type: ignore[no-redef]  # noqa: F811
         # print("Bar 2: ", s, n)
         return f"Bar 2: {s}, {n}"
 
@@ -94,7 +87,7 @@ class Date(metaclass=MultiMeta):
         self.month = month
         self.day = day
 
-    def __init__(self):  # noqa: F811
+    def __init__(self):  # type: ignore[no-redef]  # noqa: F811
         t = time.localtime()
         self.__init__(t.tm_year, t.tm_mon, t.tm_mday)
 
