@@ -3,9 +3,11 @@
 # PYTHON_ARGCOMPLETE_OK
 from typing import Any
 import sys
+import time
 import types as typesmod
 import inspect
-import pytest
+
+# import pytest
 
 
 class MultiDict(dict):
@@ -25,29 +27,22 @@ class MultiDict(dict):
 
 class MultiMethod:
     def __init__(self, name=None):
-        self._name = name
-        self._types = {}  # signature -> method dict
-        self._signatures = {}
+        # self.__name__ = name
+        self._signatures = []
 
     def select_signatue(
         self, *args: list[Any], **kwargs: dict[str, Any]
     ) -> tuple[type, ...]:
-        for key, sig in self._signatures.items():
+        for sig, omethod in self._signatures:
             try:
                 sig.bind(*args, **kwargs)
-                return tuple([parm.annotation for parm in sig.parameters.values()])
+                return omethod
             except TypeError:
                 pass  # continue checking
         raise TypeError(f"No matching method for {args}, {kwargs}")
 
     def __call__(self, *args, **kwargs):
-        types = tuple([type(arg) for arg in args][1:])
-        try:
-            omethod = self._types[types]
-        except KeyError:
-            types = self.select_signatue(*args, **kwargs)
-            # types = self.add_default_types(types)
-            omethod = self._types[types[1:]]
+        omethod = self.select_signatue(*args, **kwargs)
         return omethod(*args, **kwargs)
 
     def __get__(self, instance, owner=None):
@@ -57,9 +52,7 @@ class MultiMethod:
 
     def register(self, omethod):  # overloaded method
         sig = inspect.signature(omethod)
-        types = tuple([v.annotation for v in sig.parameters.values()][1:])
-        self._types[types] = omethod
-        self._signatures[self._name] = sig
+        self._signatures.append((sig, omethod))
 
 
 class MultiMeta(type):
@@ -70,15 +63,10 @@ class MultiMeta(type):
 
 class Spam(metaclass=MultiMeta):
     def bar(self, x: int, y: int):
-        # print("Bar 1: ", x, y)
-        return f"Bar 1: {x}, {y}"
+        return f"Bar 1: {type(x) = }, {type(y) = }, {x}, {y}"
 
-    def bar(self, s: str, n: int = 0):  # type: ignore[no-redef]  # noqa: F811
-        # print("Bar 2: ", s, n)
+    def bar(self, s: str, n: int = 0):  # noqa: F811
         return f"Bar 2: {s}, {n}"
-
-
-import time  # noqa: E402
 
 
 class Date(metaclass=MultiMeta):
@@ -87,26 +75,17 @@ class Date(metaclass=MultiMeta):
         self.month = month
         self.day = day
 
-    def __init__(self):  # type: ignore[no-redef]  # noqa: F811
+    def __init__(self):  # noqa: F811
         t = time.localtime()
         self.__init__(t.tm_year, t.tm_mon, t.tm_mday)
 
 
-def test_basic():
-    s = Spam()
-    assert s.bar(3, 5) == "Bar 1: 3, 5"
-    assert s.bar("hello", 22) == "Bar 2: hello, 22"
-    assert s.bar("hello") == "Bar 2: hello, 0"
-    d = Date(2012, 12, 21)
-    assert (d.year, d.month, d.day) == (2012, 12, 21)
-    e = Date()
-
-    def today():
-        t = time.localtime()
-        return t.tm_year, t.tm_mon, t.tm_mday
-
-    assert (e.year, e.month, e.day) == today()
-
-
 if __name__ == "__main__":
-    pytest.main(sys.argv)
+    s = Spam()
+    print(s.bar(3, 5))
+    print(s.bar("hello", 22))
+    print(s.bar("hello"))
+    d = Date(2012, 12, 21)
+    print(d)
+    e = Date()
+    print(e)
