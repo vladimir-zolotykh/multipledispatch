@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
 from typing import Callable, Any
+from collections import defaultdict
 import time
 import types as typesmod
 import inspect
@@ -29,7 +30,8 @@ class MultiMethod:
     def __init__(self, name=None):
         self._name = name
 
-        self._ovmethods: dict[str, tuple[inspect.Signature, Callable]] = {}
+        # self._ovmethods: dict[str, tuple[inspect.Signature, Callable]] = {}
+        self._ovmethods = defaultdict(list)
 
     def select_overloaded_method(
         self, *args: list[Any], **kwargs: dict[str, Any]
@@ -39,13 +41,17 @@ class MultiMethod:
         found.
 
         """
-        for ov_name, (sig, ovmethod) in self._ovmethods.items():
+        # for ov_name, (sig, ovmethod) in self._ovmethods.items():
+        ov_name = self._name
+        for sig, ovmethod in self._ovmethods[ov_name]:
             hints = get_type_hints(ovmethod)
             try:
                 bound = sig.bind(*args, **kwargs)
                 bound.apply_defaults()
-                expected = hints[ov_name]
                 for arg_name, arg_value in bound.arguments.items():
+                    if arg_name == "self":
+                        continue
+                    expected = hints[arg_name]
                     if arg_name in hints:
                         expected = hints[arg_name]
                         if not isinstance(arg_value, expected):
@@ -66,7 +72,7 @@ class MultiMethod:
 
     def register(self, ovmethod):  # overloaded method
         sig = inspect.signature(ovmethod)
-        self._ovmethods[ovmethod.__name__] = (sig, ovmethod)
+        self._ovmethods[ovmethod.__name__].append((sig, ovmethod))
 
 
 class MultiMeta(type):
