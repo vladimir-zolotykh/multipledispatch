@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
-from typing import Any
-import sys
+from typing import Callable, Any
 import time
 import types as typesmod
 import inspect
+from typing import get_type_hints
 
 # import pytest
 
@@ -15,44 +15,58 @@ class MultiDict(dict):
         if key not in self:
             super().__setitem__(key, value)
             return
-        ovalue = self[key]
-        if isinstance(ovalue, MultiMethod):
-            mm = ovalue
+        ov_value = self[key]
+        if isinstance(ov_value, MultiMethod):
+            mm = ov_value
         else:
             mm = MultiMethod(key)
-            mm.register(ovalue)
+            mm.register(ov_value)
         mm.register(value)
         super().__setitem__(key, mm)
 
 
 class MultiMethod:
     def __init__(self, name=None):
-        # self.__name__ = name
-        self._signatures = []
+        self._name = name
 
-    def select_signatue(
+        self._ovmethods: dict[str, tuple[inspect.Signature, Callable]] = {}
+
+    def select_overloaded_method(
         self, *args: list[Any], **kwargs: dict[str, Any]
     ) -> tuple[type, ...]:
-        for sig, omethod in self._signatures:
+        """Iterate all registered methods in self._ovmethods. Return
+        one that matches *args, **kwargs. Raise TypeError if not
+        found.
+
+        """
+        for ov_name, (sig, ovmethod) in self._ovmethods.items():
+            hints = get_type_hints(ovmethod)
             try:
-                sig.bind(*args, **kwargs)
-                return omethod
+                bound = sig.bind(*args, **kwargs)
+                bound.apply_defaults()
+                expected = hints[ov_name]
+                for arg_name, arg_value in bound.arguments.items():
+                    if arg_name in hints:
+                        expected = hints[arg_name]
+                        if not isinstance(arg_value, expected):
+                            break  # validate next OV method
+                return ovmethod
             except TypeError:
                 pass  # continue checking
-        raise TypeError(f"No matching method for {args}, {kwargs}")
+        raise TypeError(f"No matching method {self._name} for {args}, {kwargs}")
 
     def __call__(self, *args, **kwargs):
-        omethod = self.select_signatue(*args, **kwargs)
-        return omethod(*args, **kwargs)
+        ovmethod = self.select_overloaded_method(*args, **kwargs)
+        return ovmethod(*args, **kwargs)
 
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
         return typesmod.MethodType(self, instance)
 
-    def register(self, omethod):  # overloaded method
-        sig = inspect.signature(omethod)
-        self._signatures.append((sig, omethod))
+    def register(self, ovmethod):  # overloaded method
+        sig = inspect.signature(ovmethod)
+        self._ovmethods[ovmethod.__name__] = (sig, ovmethod)
 
 
 class MultiMeta(type):
