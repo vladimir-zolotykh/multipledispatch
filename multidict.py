@@ -82,6 +82,16 @@ class MultiMeta(type):
 
 
 class Spam(metaclass=MultiMeta):
+    """
+    >>> s = Spam()
+    >>> print(s.bar(3, 5))
+    Bar 1: 3, 5
+    >>> print(s.bar("hello", 22))
+    Bar 1: hello, 22
+    >>> print(s.bar("hello"))
+    Bar 2: hello, 0
+    """
+
     def bar(self, x: int, y: int):
         return f"Bar 1: {x}, {y}"
 
@@ -90,6 +100,15 @@ class Spam(metaclass=MultiMeta):
 
 
 class Date(metaclass=MultiMeta):
+    """
+    >>> d = Date(2012, 12, 21)
+    >>> print(d)
+    Date(2012, 12, 21)
+    >>> e = Date()
+    >>> print(e)
+    Date(2026, 4, 18)
+    """
+
     def __init__(self, year: int, month: int, day: int):
         self.year = year
         self.month = month
@@ -104,11 +123,6 @@ class Date(metaclass=MultiMeta):
 
 
 if __name__ == "__main__":
-    s = Spam()
-    print(s.bar(3, 5))
-    print(s.bar("hello", 22))
-    print(s.bar("hello"))
-    d = Date(2012, 12, 21)
-    print(d)
-    e = Date()
-    print(e)
+    import doctest
+
+    doctest.testmod()
