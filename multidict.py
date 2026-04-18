@@ -171,5 +171,19 @@ class TestDate(unittest.TestCase):
             Date("2020", "01", "02")
 
 
+class TestMultiMethodInternals(unittest.TestCase):
+    def test_kwargs_and_args_mix(self):
+        s = Spam()
+        self.assertEqual(s.bar("x", n=3), "Bar 2: x, 3")
+
+    def test_default_resolution(self):
+        s = Spam()
+        self.assertEqual(s.bar("x"), "Bar 2: x, 0")
+
+    def test_int_overload_precedence(self):
+        s = Spam()
+        self.assertEqual(s.bar(10, 20), "Bar 1: 10, 20")
+
+
 if __name__ == "__main__":
     unittest.main()
