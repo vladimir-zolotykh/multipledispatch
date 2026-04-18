@@ -6,8 +6,7 @@ import time
 import types as typesmod
 import inspect
 from typing import get_type_hints
-
-# import pytest
+import unittest
 
 
 class MultiDict(dict):
@@ -50,8 +49,7 @@ class MultiMethod:
                     if arg_name in hints:
                         expected = hints[arg_name]
                         if not isinstance(arg_value, expected):
-                            break  # validate next OV method
-                return ovmethod
+                            raise TypeError()
             except TypeError:
                 pass  # continue checking
         raise TypeError(f"No matching method {self._name} for {args}, {kwargs}")
@@ -117,7 +115,60 @@ class Date(metaclass=MultiMeta):
         return f"{self.__class__.__name__}({', '.join([str(getattr(self, attr)) for attr in self.__dict__])})"
 
 
-if __name__ == "__main__":
-    import doctest
+class TestSpam(unittest.TestCase):
+    def setUp(self):
+        self.s = Spam()
 
-    doctest.testmod()
+    def test_type_mismatch_raises(self):
+        with self.assertRaises(TypeError):
+            self.s.bar(3, "bad")
+
+    def test_no_matching_overload(self):
+        with self.assertRaises(TypeError):
+            self.s.bar(3.14, 2.71)
+
+    def test_kwargs_dispatch(self):
+        self.assertEqual(self.s.bar(s="hi", n=5), "Bar 2: hi, 5")
+
+    def test_partial_kwargs(self):
+        self.assertEqual(self.s.bar(s="hi"), "Bar 2: hi, 0")
+
+    def test_bound_unbound_equivalence(self):
+        self.assertEqual(self.s.bar(1, 2), Spam.bar(self.s, 1, 2))
+
+    def test_method_is_descriptor(self):
+        self.assertTrue(callable(Spam.bar))
+        self.assertTrue(callable(self.s.bar))
+
+    def test_error_message_contains_name(self):
+        try:
+            self.s.bar(1.1, 2.2)
+        except TypeError as e:
+            self.assertIn("bar", str(e))
+
+
+class TestDate(unittest.TestCase):
+    def test_explicit_init(self):
+        d = Date(2020, 1, 2)
+        self.assertEqual((d.year, d.month, d.day), (2020, 1, 2))
+
+    def test_no_args_init_matches_today(self):
+        t = time.localtime()
+        d = Date()
+        self.assertEqual((d.year, d.month, d.day), (t.tm_year, t.tm_mon, t.tm_mday))
+
+    def test_repr_format(self):
+        d = Date(2000, 2, 3)
+        self.assertEqual(repr(d), "Date(2000, 2, 3)")
+
+    def test_invalid_signature(self):
+        with self.assertRaises(TypeError):
+            Date(1)
+
+    def test_type_validation(self):
+        with self.assertRaises(TypeError):
+            Date("2020", "01", "02")
+
+
+if __name__ == "__main__":
+    unittest.main()
