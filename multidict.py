@@ -50,6 +50,7 @@ class MultiMethod:
                         expected = hints[arg_name]
                         if not isinstance(arg_value, expected):
                             raise TypeError()
+                return ovmethod
             except TypeError:
                 pass  # continue checking
         raise TypeError(f"No matching method {self._name} for {args}, {kwargs}")
