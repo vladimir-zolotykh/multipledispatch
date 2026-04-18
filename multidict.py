@@ -83,7 +83,7 @@ class MultiMeta(type):
 
 class Spam(metaclass=MultiMeta):
     def bar(self, x: int, y: int):
-        return f"Bar 1: {type(x) = }, {type(y) = }, {x}, {y}"
+        return f"Bar 1: {x}, {y}"
 
     def bar(self, s: str, n: int = 0):  # noqa: F811
         return f"Bar 2: {s}, {n}"
@@ -98,6 +98,9 @@ class Date(metaclass=MultiMeta):
     def __init__(self):  # noqa: F811
         t = time.localtime()
         self.__init__(t.tm_year, t.tm_mon, t.tm_mday)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({', '.join([str(getattr(self, attr)) for attr in self.__dict__])})"
 
 
 if __name__ == "__main__":
