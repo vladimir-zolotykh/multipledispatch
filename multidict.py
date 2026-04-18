@@ -41,9 +41,7 @@ class MultiMethod:
         found.
 
         """
-        # for ov_name, (sig, ovmethod) in self._ovmethods.items():
-        ov_name = self._name
-        for sig, ovmethod in self._ovmethods[ov_name]:
+        for sig, ovmethod in self._ovmethods[self._name]:
             hints = get_type_hints(ovmethod)
             try:
                 bound = sig.bind(*args, **kwargs)
