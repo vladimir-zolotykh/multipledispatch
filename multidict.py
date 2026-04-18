@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
-from typing import Callable, Any
-from collections import defaultdict
+from typing import Any
 import time
 import types as typesmod
 import inspect
@@ -29,9 +28,6 @@ class MultiDict(dict):
 class MultiMethod:
     def __init__(self, name=None):
         self._name = name
-
-        # self._ovmethods: dict[str, tuple[inspect.Signature, Callable]] = {}
-        # self._ovmethods = defaultdict(list)
         self._ovmethods = []
 
     def select_overloaded_method(
@@ -42,7 +38,6 @@ class MultiMethod:
         found.
 
         """
-        # for sig, ovmethod in self._ovmethods[self._name]:
         for sig, ovmethod in self._ovmethods:
             hints = get_type_hints(ovmethod)
             try:
@@ -72,7 +67,6 @@ class MultiMethod:
 
     def register(self, ovmethod):  # overloaded method
         sig = inspect.signature(ovmethod)
-        # self._ovmethods[ovmethod.__name__].append((sig, ovmethod))
         self._ovmethods.append((sig, ovmethod))
 
 
