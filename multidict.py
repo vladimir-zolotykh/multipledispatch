@@ -50,7 +50,7 @@ class MultiMethod:
                     if arg_name in hints:
                         expected = hints[arg_name]
                         if not isinstance(arg_value, expected):
-                            break  # validate next OV method
+                            raise TypeError
                 return ovmethod
             except TypeError:
                 pass  # continue checking
@@ -82,7 +82,7 @@ class Spam(metaclass=MultiMeta):
     >>> print(s.bar(3, 5))
     Bar 1: 3, 5
     >>> print(s.bar("hello", 22))
-    Bar 1: hello, 22
+    Bar 2: hello, 22
     >>> print(s.bar("hello"))
     Bar 2: hello, 0
     """
