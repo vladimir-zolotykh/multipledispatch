@@ -31,7 +31,8 @@ class MultiMethod:
         self._name = name
 
         # self._ovmethods: dict[str, tuple[inspect.Signature, Callable]] = {}
-        self._ovmethods = defaultdict(list)
+        # self._ovmethods = defaultdict(list)
+        self._ovmethods = []
 
     def select_overloaded_method(
         self, *args: list[Any], **kwargs: dict[str, Any]
@@ -41,7 +42,8 @@ class MultiMethod:
         found.
 
         """
-        for sig, ovmethod in self._ovmethods[self._name]:
+        # for sig, ovmethod in self._ovmethods[self._name]:
+        for sig, ovmethod in self._ovmethods:
             hints = get_type_hints(ovmethod)
             try:
                 bound = sig.bind(*args, **kwargs)
@@ -70,7 +72,8 @@ class MultiMethod:
 
     def register(self, ovmethod):  # overloaded method
         sig = inspect.signature(ovmethod)
-        self._ovmethods[ovmethod.__name__].append((sig, ovmethod))
+        # self._ovmethods[ovmethod.__name__].append((sig, ovmethod))
+        self._ovmethods.append((sig, ovmethod))
 
 
 class MultiMeta(type):
