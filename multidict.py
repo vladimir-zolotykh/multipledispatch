@@ -105,8 +105,8 @@ class Date(metaclass=MultiMeta):
     >>> print(d)
     Date(2012, 12, 21)
     >>> e = Date()
-    >>> print(e)
-    Date(2026, 4, 18)
+    >>> print(e)  # doctest: +ELLIPSIS
+    Date(..., ..., ...)
     """
 
     def __init__(self, year: int, month: int, day: int):
